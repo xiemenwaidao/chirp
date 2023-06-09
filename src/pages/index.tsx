@@ -8,6 +8,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
 import { LoadingPage } from "~/components/Loading";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
@@ -22,6 +23,19 @@ const CreatePostWizard = () => {
         onSuccess: () => {
             setInput("");
             void ctx.post.getAll.invalidate();
+        },
+        onError: (err) => {
+            const errorMessage = err.data?.zodError?.fieldErrors.content;
+
+            if (errorMessage && errorMessage[0]) {
+                toast.error(errorMessage[0]);
+            } else {
+                if (err.message) {
+                    toast.error(err.message);
+                } else {
+                    toast.error("Failed to post, please try again later");
+                }
+            }
         },
     });
 
@@ -40,15 +54,17 @@ const CreatePostWizard = () => {
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isPosting}
             />
-            <button
-                type="button"
-                className="mb-2 mr-2 rounded-lg bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-                onClick={() => {
-                    mutate({ content: input });
-                }}
-            >
-                Post
-            </button>
+            {input !== "" && !isPosting && (
+                <button
+                    type="button"
+                    className="mb-2 mr-2 rounded-lg bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
+                    onClick={() => {
+                        mutate({ content: input });
+                    }}
+                >
+                    Post
+                </button>
+            )}
         </div>
     );
 };
